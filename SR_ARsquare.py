@@ -5,160 +5,188 @@ Created on Thu Sep 19 14:01:28 2024
 @author: abelr and alexandrer
 """
 
+
+
 from PIL import Image
 import numpy as np
-import scipy.ndimage as ndi
+#import scipy.ndimage as ndi
 from skimage import measure, filters
 import matplotlib.pyplot as plt
-
+import cv2
 
 # Load the uploaded image
-image_path_1 = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
-image_1 = Image.open(image_path_1)
-
-# Convert the image to grayscale
-gray_image_1 = image_1.convert("L")
-
-# Convert the grayscale image to a numpy array
-image_array_1 = np.array(gray_image_1)
-
-# Apply a threshold to isolate the particle from the background (assuming white background)
-threshold_value = 200
-binary_image_1 = np.where(image_array_1 < threshold_value, 1, 0)
-
-# Find the bounding box of the particle using this thresholded binary image
-non_white_pixels_1 = np.argwhere(binary_image_1 > 0)
-
-# Get the bounding box coordinates
-min_row_1, min_col_1 = non_white_pixels_1.min(axis=0)
-max_row_1, max_col_1 = non_white_pixels_1.max(axis=0)
-
-# Calculate B1, B2 and B for the first image
-B1_image_1 = max_col_1 - min_col_1  # Width of the bounding box
-B2_image_1 = max_row_1 - min_row_1  # Height of the bounding box
-B_image_1 = (B1_image_1 + B2_image_1) / 2  # Average of B1 and B2
-
-B1_image_1, B2_image_1, B_image_1
-
-image_1.show()
-
-
-# Load the latest image
-image_path = image_path_1
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
 image = Image.open(image_path)
 
-# # Convert the image to grayscale
-# gray_image = image.convert("L")
+def MakeBinary(image_path):
+    #Take an image and make binary, needs an image path
+    image = Image.open(image_path)
+    # Convert the image to grayscale
+    gray_image = image.convert("L")
+    # Convert the grayscale image to a numpy array
+    image_array = np.array(gray_image)
+    # Apply a threshold to isolate the particle from the background (assuming white background)
+    threshold_value = filters.threshold_otsu(image_array)
+    BinaryImage = np.where(image_array < threshold_value, 1, 0)
+    return BinaryImage
 
-# # Convert the grayscale image to a numpy array
-# image_array = np.array(gray_image)
+def GetB(BinaryImage):
+    #Take a binary image and gives the bounding box and the B associated (VanSluytmann 2012)
+    binary_image = BinaryImage
+    # Find the bounding box of the particle using this thresholded binary image
+    non_white_pixels_1 = np.argwhere(binary_image > 0)
+    # Get the bounding box coordinates
+    min_row, min_col = non_white_pixels_1.min(axis=0)
+    max_row, max_col = non_white_pixels_1.max(axis=0)
+    # Calculate B1, B2 and B for the first image
+    B1 = max_col - min_col  # Width of the bounding box
+    B2 = max_row - min_row  # Height of the bounding box
+    B = (B1 + B2) / 2  # Average of B1 and B2
+    return B, B1, B2, min_row, min_col, max_row, max_col
 
-# # Apply a threshold to isolate the particle from the background
-# threshold_value = 200
-# binary_image = np.where(image_array < threshold_value, 1, 0)
+def GetContour(BinaryImage):
+    #Take a binary image and returns the Contour
+    # Find contours of the particle
+    Contours1 = measure.find_contours(BinaryImage, level=0.8)
+    # # Find the largest contour, which corresponds to the outer boundary of the particle
+    Contours = max(Contours1, key=len)
+    return Contours
 
-# # Calculate the gradient (tangent) of the binary image
-# gradient_x = ndi.sobel(binary_image, axis=1)
-# gradient_y = ndi.sobel(binary_image, axis=0)
+def DCBB(Contours, min_row, min_col, max_row, max_col):
+    #Take a Contours and returns Distance between the Contour of the particle and the Bounding Box
+    # Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
+    center_x = (min_col + max_col) / 2
+    center_y = (min_row + max_row) / 2
+    # Calculate the moments of the contour to find the center
+    # moments = cv2.moments(Contours)
+    # if moments['m00'] != 0:
+    #         center_x = int(moments['m10'] / moments['m00'])
+    #         center_y = int(moments['m01'] / moments['m00'])
+    # else:
+    #     center_x, center_y = 0, 0  # If the contour area is zero, center defaults to (0, 0)
 
-# # Calculate the magnitude of the gradient (norm of the vector)
-# gradient_magnitude = np.hypot(gradient_x, gradient_y)
+    # # Calculate the polar coordinates (angles and distances from the center)
+    angles = np.arctan2(largest_contour_new[:, 0] - center_y, largest_contour_new[:, 1] - center_x)
 
-# # Threshold the gradient to find where the tangent is close to zero
-# zero_tangent = (gradient_magnitude < 1e-5).astype(int)
+    # Sort the angles and corresponding distances for proper plotting
+    sorted_indices = np.argsort(angles)
+    sorted_angles = angles[sorted_indices]
+    # sorted_distances_to_rectangle = distances_to_rectangle[sorted_indices]
 
-# # Find the points where the tangent is zero (these will correspond to the red cross points)
-# coordinates_of_zeros = np.argwhere(zero_tangent > 0)
+    # Calculate the distances between the contour of the particle and the bounding box edges
+    # Distances to the four edges of the bounding box
+    distance_to_left_edge = np.abs(largest_contour_new[:, 1] - min_col)
+    distance_to_right_edge = np.abs(largest_contour_new[:, 1] - max_col)
+    distance_to_top_edge = np.abs(largest_contour_new[:, 0] - min_row)
+    distance_to_bottom_edge = np.abs(largest_contour_new[:, 0] - max_row)
 
-# # Determine the bounding box of the purple rectangle from these points
-# min_row, min_col = coordinates_of_zeros.min(axis=0)
-# max_row, max_col = coordinates_of_zeros.max(axis=0)
+    # For each point on the contour, find the minimum distance to the bounding box edges
+    distances_to_bounding_box = np.minimum.reduce([
+        distance_to_left_edge,
+        distance_to_right_edge,
+        distance_to_top_edge,
+        distance_to_bottom_edge
+    ])
 
-# # Calculate A1 and A2 (dimensions of the purple rectangle)
-# A1 = max_col - min_col  # Width of the purple rectangle
-# A2 = max_row - min_row  # Height of the purple rectangle
+    # Sort the angles and corresponding distances for proper plotting
+    sorted_distances_to_bounding_box = distances_to_bounding_box[sorted_indices]
+    return sorted_distances_to_bounding_box, sorted_angles
 
-# A1, A2
+GetB(MakeBinary(image_path))[3]
+     
+sorted_distances_to_bounding_box=DCBB(GetContour(MakeBinary(image_path)),GetB(MakeBinary(image_path))[3],GetB(MakeBinary(image_path))[4],GetB(MakeBinary(image_path))[5],GetB(MakeBinary(image_path))[6])[0]
+sorted_angles=DCBB(GetContour(MakeBinary(image_path)),GetB(MakeBinary(image_path))[3],GetB(MakeBinary(image_path))[4],GetB(MakeBinary(image_path))[5],GetB(MakeBinary(image_path))[6])[1]
 
-
-
-# Load the newly uploaded image
-image_path_2 = image_path_1
-image_2 = Image.open(image_path_2)
-
-# # Convert the image to grayscale
-# gray_image_2 = image_2.convert("L")
-
-# # Convert the grayscale image to a numpy array
-# image_array_2 = np.array(gray_image_2)
-
-# # Apply a threshold to extract the particle (using Otsu's method to find the optimal threshold)
-# threshold_value_2 = filters.threshold_otsu(image_array_2)
-# binary_image_2 = image_array_2 < threshold_value_2
-
-# # Find contours of the particle
-# contours = measure.find_contours(binary_image_2, level=0.8)
-
-# # Find the largest contour, which corresponds to the outer boundary of the particle
-# largest_contour = max(contours, key=len)
-
-# # Now, we will calculate the tangents along the contour and identify the points where tangents might approximate to zero
-# # Calculate the gradient (difference) of points along the contour
-# gradient = np.gradient(largest_contour, axis=0)
-# tangents = np.arctan2(gradient[:, 1], gradient[:, 0])
-
-# # Find indices where the tangent approximately changes direction (potential inflection points)
-# tangent_diff = np.diff(tangents)
-# zero_crossings = np.where(np.sign(tangent_diff[:-1]) != np.sign(tangent_diff[1:]))[0]
-
-# # Step 1: Calculate the centroid (center) of the particle based on its contour
-# centroid = np.mean(largest_contour, axis=0)
-
-# # Step 2: Calculate distances from each point on the contour to the centroid
-# distances_to_centroid = np.linalg.norm(largest_contour - centroid, axis=1)
-
-# # Step 4: Select the 8 most distant points from the centroid
-# sorted_indices = np.argsort(distances_to_centroid)[-8:]
-# key_points_new = largest_contour[sorted_indices]
-# key_points_new
-
-
-# # Separate into A1 and A2 based on points
-# A1 = np.linalg.norm(key_points_new[0] - key_points_new[4])  # Opposite points in key_points
-# A2 = np.linalg.norm(key_points_new[2] - key_points_new[6])
-
-# # Display the points and rectangle on the image
-# fig, ax = plt.subplots()
-# ax.imshow(binary_image_2, cmap='gray')
-# ax.plot(largest_contour[:, 1], largest_contour[:, 0], '-b', label='Contour')
-
-# # Plot key points (red crosses)
-# ax.plot(key_points_new[:, 1], key_points_new[:, 0], 'xr', label='Key points')
-
-# # Display rectangle dimensions
-# plt.title(f"A1 = {A1:.2f}, A2 = {A2:.2f}")
-# plt.legend()
-# plt.show()
-
-# A1, A2
+# Plot the distance to the bounding box as a function of the angle
+plt.figure(figsize=(10, 6))
+plt.plot(sorted_angles, sorted_distances_to_bounding_box, label="Distance to Bounding Box", color='blue')
+plt.title("Distance between the Contour of the Particle and the Bounding Box")
+plt.xlabel("Angle (radians)")
+plt.ylabel("Distance (pixels)")
+plt.legend()
+plt.grid(True)
+plt.show()
 
 
-# Load the newly uploaded image (original step 1 image)
-image_path_step1 = image_path_1
-image_step1 = Image.open(image_path_step1)
 
-# # Convert the image to grayscale
-gray_image_step1 = image_step1.convert("L")
+def find_enclosing_quadrilateral(image_path):
+    # Load the image
+    img = Image.open(image_path).convert("L")
+    
+    # Convert the image to binary using Otsu's method
+    _, binary_img_otsu = cv2.threshold(np.array(img), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    # Extract contours from the binary image
+    contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if len(contours) > 0:
+        # Get the largest contour
+        largest_contour = max(contours, key=cv2.contourArea)
+
+        # Get the minimum area bounding quadrilateral (external to the particle)
+        rect = cv2.minAreaRect(largest_contour)
+        box_points = cv2.boxPoints(rect)
+        box_points = np.int0(box_points)
+
+        # Create an empty image to draw both the original contour and the quadrilateral
+        combined_image = np.zeros_like(binary_img_otsu)
+
+        # Draw the original contour in green
+        cv2.drawContours(combined_image, [largest_contour], 0, (150), 1)
+
+        # Draw the enclosing quadrilateral in white
+        cv2.drawContours(combined_image, [box_points], 0, (255), 1)
+
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.imshow(combined_image, cmap="gray")
+        ax.set_title("Enclosing Quadrilateral vs Particle")
+        
+        # Return the figure object
+        return fig
+    else:
+        print("No contours found.")
+        return None
+
+
+find_enclosing_quadrilateral(image_path)
+
+
+
+ 
+BinaryImage = MakeBinary(image_path)
+GetB(BinaryImage)
+
+
+GetB(image_path)
+
+# Convert the image to grayscale
+gray_image = image.convert("L")
 
 # Convert the grayscale image to a numpy array
-image_array_step1 = np.array(gray_image_step1)
+image_array = np.array(gray_image)
 
-# Apply a threshold to extract the particle (using Otsu's method to find the optimal threshold)
-threshold_value_step1 = filters.threshold_otsu(image_array_step1)
-binary_image_step1 = image_array_step1 < threshold_value_step1
+# Apply a threshold to isolate the particle from the background (assuming white background)
+threshold_value = filters.threshold_otsu(image_array)
+binary_image = np.where(image_array < threshold_value, 1, 0)
+
+# Find the bounding box of the particle using this thresholded binary image
+non_white_pixels_1 = np.argwhere(binary_image > 0)
+
+# Get the bounding box coordinates
+min_row, min_col = non_white_pixels_1.min(axis=0)
+max_row, max_col = non_white_pixels_1.max(axis=0)
+
+# Calculate B1, B2 and B for the first image
+B1_image = max_col - min_col  # Width of the bounding box
+B2_image = max_row - min_row  # Height of the bounding box
+B_image = (B1_image + B2_image) / 2  # Average of B1 and B2
+
+B1_image, B2_image, B_image
+
 
 # # Find contours of the particle
-contours_step1 = measure.find_contours(binary_image_step1, level=0.8)
+contours_step1 = measure.find_contours(binary_image, level=0.8)
 
 # # Find the largest contour, which corresponds to the outer boundary of the particle
 largest_contour_step1 = max(contours_step1, key=len)
@@ -167,56 +195,9 @@ largest_contour_step1 = max(contours_step1, key=len)
 gradient_step1 = np.gradient(largest_contour_step1, axis=0)
 tangents_step1 = np.arctan2(gradient_step1[:, 1], gradient_step1[:, 0])
 
-# # Identify the points where the tangents change direction
-# tangent_diff_step1 = np.diff(tangents_step1)
-# zero_crossings_step1 = np.where(np.sign(tangent_diff_step1[:-1]) != np.sign(tangent_diff_step1[1:]))[0]
-
-# # Step 1: Calculate the centroid (center) of the particle based on its contour
-# centroid_step1 = np.mean(largest_contour_step1, axis=0)
-
-# # Step 2: Calculate distances from each point on the contour to the centroid
-# distances_to_centroid_step1 = np.linalg.norm(largest_contour_step1 - centroid_step1, axis=1)
-
-# # Step 3: Select the 8 most distant points from the centroid
-# sorted_indices_step1 = np.argsort(distances_to_centroid_step1)[-8:]
-# key_points_step1 = largest_contour_step1[sorted_indices_step1]
-
-# # Plot the original image with key points marked
-# fig, ax = plt.subplots()
-# ax.imshow(binary_image_step1, cmap='gray')
-# ax.plot(largest_contour_step1[:, 1], largest_contour_step1[:, 0], '-b', label='Contour')
-
-# # Plot key points (red crosses)
-# ax.plot(key_points_step1[:, 1], key_points_step1[:, 0], 'xr', markersize=10, label='Key points')
-
-# # Annotate the points with their index
-# for i, (y, x) in enumerate(key_points_step1):
-#     ax.text(x, y, f'{i+1}', color='yellow', fontsize=12, ha='center')
-
-# plt.title("Identified key points on Step 1")
-# plt.legend()
-# plt.show()
-
-# # Return the key points coordinates
-# key_points_step1
-
-
-# Load the newly uploaded image
-image_path_new = image_path_1
-image_new = Image.open(image_path_new)
-
-# Convert the image to grayscale
-gray_image_new = image_new.convert("L")
-
-# Convert the grayscale image to a numpy array
-image_array_new = np.array(gray_image_new)
-
-# Apply a threshold to extract the particle (using Otsu's method to find the optimal threshold)
-threshold_value_new = filters.threshold_otsu(image_array_new)
-binary_image_new = image_array_new < threshold_value_new
 
 # Find contours of the particle
-contours_new = measure.find_contours(binary_image_new, level=0.8)
+contours_new = measure.find_contours(binary_image, level=0.8)
 
 # Find the largest contour, which corresponds to the outer boundary of the particle
 largest_contour_new = max(contours_new, key=len)
@@ -227,139 +208,44 @@ centroid_new = np.mean(largest_contour_new, axis=0)
 # Step 2: Calculate distances from each point on the contour to the centroid
 distances_to_centroid_new = np.linalg.norm(largest_contour_new - centroid_new, axis=1)
 
-# Split the contour points into four quadrants based on the centroid
-top_left_quadrant_new = []
-top_right_quadrant_new = []
-bottom_left_quadrant_new = []
-bottom_right_quadrant_new = []
-
-# Iterate through the contour points and assign them to quadrants
-for point in largest_contour_new:
-    if point[0] < centroid_new[0] and point[1] < centroid_new[1]:
-        top_left_quadrant_new.append(point)
-    elif point[0] < centroid_new[0] and point[1] >= centroid_new[1]:
-        top_right_quadrant_new.append(point)
-    elif point[0] >= centroid_new[0] and point[1] < centroid_new[1]:
-        bottom_left_quadrant_new.append(point)
-    elif point[0] >= centroid_new[0] and point[1] >= centroid_new[1]:
-        bottom_right_quadrant_new.append(point)
-
-# # Convert lists to numpy arrays for easier processing
-# top_left_quadrant_new = np.array(top_left_quadrant_new)
-# top_right_quadrant_new = np.array(top_right_quadrant_new)
-# bottom_left_quadrant_new = np.array(bottom_left_quadrant_new)
-# bottom_right_quadrant_new = np.array(bottom_right_quadrant_new)
-
-
-
-
-
-
-# # Calculate the window size as 2% of the number of points in the contour
-# window_size_percentage = int(len(tangents_step1) * 0.005)
-
-# # Calculate the gradient (difference) of points along the contour
-# gradient_step1 = np.gradient(largest_contour_step1, axis=0)
-# tangents_step1 = np.arctan2(gradient_step1[:, 1], gradient_step1[:, 0])
-
-# # Ensure the window size is at least 1
-# window_size_percentage = max(window_size_percentage, 1)
-
-# # Apply a moving average (floating average) to smooth the tangents using the 2% window size
-# smoothed_tangents_percentage = np.convolve(tangents_step1, np.ones(window_size_percentage)/window_size_percentage, mode='same')
-
-# # Plot the smoothed tangents along the contour
-# plt.figure(figsize=(10, 6))
-# plt.plot(smoothed_tangents_percentage, label=f"Smoothed Tangents (Moving Average, 2% window)", color='orange')
-# plt.title(f"Smoothed Tangents along the Contour of the Particle (Moving Average of {window_size_percentage} points)")
-# plt.xlabel("Contour Index")
-# plt.ylabel("Tangent (radians)")
-# plt.legend()
-# plt.grid(True)
-# plt.show()
-
-
-
-# Load the newly uploaded image
-image_path_restart = image_path_1
-image_restart = Image.open(image_path_restart)
 
 # Convert the image to grayscale
-gray_image_restart = image_restart.convert("L")
-
-# Convert the grayscale image to a numpy array
-image_array_restart = np.array(gray_image_restart)
-
-# Apply a threshold to extract the particle (using Otsu's method to find the optimal threshold)
-threshold_value_restart = filters.threshold_otsu(image_array_restart)
-binary_image_restart = image_array_restart < threshold_value_restart
-
-# Find the bounding box of the particle (smallest rectangle that encloses the particle)
-non_white_pixels_restart = np.argwhere(binary_image_restart > 0)
-min_row_restart, min_col_restart = non_white_pixels_restart.min(axis=0)
-max_row_restart, max_col_restart = non_white_pixels_restart.max(axis=0)
+gray_image_restart = image.convert("L")
 
 # Plot the original image with the bounding box drawn
 fig, ax = plt.subplots()
-ax.imshow(binary_image_restart, cmap='gray')
-ax.plot([min_col_restart, max_col_restart, max_col_restart, min_col_restart, min_col_restart],
-        [min_row_restart, min_row_restart, max_row_restart, max_row_restart, min_row_restart], color='red', label='Bounding Box')
+ax.imshow(binary_image, cmap='gray')
+ax.plot([min_col, max_col, max_col, min_col, min_col],
+        [min_row, min_row, max_row, max_row, min_row], color='red', label='Bounding Box')
 
 plt.title("Bounding Box around the Particle")
 plt.legend()
 plt.show()
 
-# Calculate B1 (width) and B2 (height) of the bounding box
-B1_restart = max_col_restart - min_col_restart  # Width of the bounding box
-B2_restart = max_row_restart - min_row_restart  # Height of the bounding box
-
-# Calculate the average B
-B_restart = (B1_restart + B2_restart) / 2
-
-B1_restart, B2_restart, B_restart
-
-
 
 
 
 # # Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
-center_x = (min_col_restart + max_col_restart) / 2
-center_y = (min_row_restart + max_row_restart) / 2
+center_x = (min_col + max_col) / 2
+center_y = (min_row + max_row) / 2
 
 # # Calculate the polar coordinates (angles and distances from the center)
 angles = np.arctan2(largest_contour_new[:, 0] - center_y, largest_contour_new[:, 1] - center_x)
 distances_from_center = np.sqrt((largest_contour_new[:, 0] - center_y)**2 + (largest_contour_new[:, 1] - center_x)**2)
 
-# # Calculate the distances between the contour and the rectangle edges
-# # Distance to the left/right sides of the rectangle
-# distance_to_vertical_edges = np.abs(largest_contour_new[:, 1] - min_col_restart)
-# distance_to_horizontal_edges = np.abs(largest_contour_new[:, 0] - min_row_restart)
-
-# # Select the minimum distance to the rectangle (either to vertical or horizontal edges)
-# distances_to_rectangle = np.minimum(distance_to_vertical_edges, distance_to_horizontal_edges)
 
 # Sort the angles and corresponding distances for proper plotting
 sorted_indices = np.argsort(angles)
 sorted_angles = angles[sorted_indices]
 # sorted_distances_to_rectangle = distances_to_rectangle[sorted_indices]
 
-# # Plot the distance to the rectangle as a function of the angle
-# plt.figure(figsize=(10, 6))
-# plt.plot(sorted_angles, sorted_distances_to_rectangle, label="Distance to Rectangle", color='orange')
-# plt.title("Distance between the Contour of the Particle and the Rectangle")
-# plt.xlabel("Angle (radians)")
-# plt.ylabel("Distance (pixels)")
-# plt.legend()
-# plt.grid(True)
-# plt.show()
-
 
 # Calculate the distances between the contour of the particle and the bounding box edges
 # Distances to the four edges of the bounding box
-distance_to_left_edge = np.abs(largest_contour_new[:, 1] - min_col_restart)
-distance_to_right_edge = np.abs(largest_contour_new[:, 1] - max_col_restart)
-distance_to_top_edge = np.abs(largest_contour_new[:, 0] - min_row_restart)
-distance_to_bottom_edge = np.abs(largest_contour_new[:, 0] - max_row_restart)
+distance_to_left_edge = np.abs(largest_contour_new[:, 1] - min_col)
+distance_to_right_edge = np.abs(largest_contour_new[:, 1] - max_col)
+distance_to_top_edge = np.abs(largest_contour_new[:, 0] - min_row)
+distance_to_bottom_edge = np.abs(largest_contour_new[:, 0] - max_row)
 
 # For each point on the contour, find the minimum distance to the bounding box edges
 distances_to_bounding_box = np.minimum.reduce([
