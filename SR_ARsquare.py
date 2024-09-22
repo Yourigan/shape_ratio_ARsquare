@@ -13,9 +13,11 @@ import numpy as np
 from skimage import measure, filters
 import matplotlib.pyplot as plt
 import cv2
+import math
+
 
 # Load the uploaded image
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example2_upscale_bis.png"
 image = Image.open(image_path)
 
 def MakeBinary(image_path):
@@ -52,33 +54,113 @@ def GetContour(BinaryImage):
     Contours = max(Contours1, key=len)
     return Contours
 
-def DCBB(Contours, min_row, min_col, max_row, max_col):
-    #Take a Contours and returns Distance between the Contour of the particle and the Bounding Box
-    # Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
-    center_x = (min_col + max_col) / 2
-    center_y = (min_row + max_row) / 2
-    # Calculate the moments of the contour to find the center
-    # moments = cv2.moments(Contours)
-    # if moments['m00'] != 0:
-    #         center_x = int(moments['m10'] / moments['m00'])
-    #         center_y = int(moments['m01'] / moments['m00'])
-    # else:
-    #     center_x, center_y = 0, 0  # If the contour area is zero, center defaults to (0, 0)
 
+
+def find_enclosing_quadrilateral(image_path):
+    # Load the image
+    img = Image.open(image_path).convert("L")
+    
+    # Convert the image to binary using Otsu's method
+    _, binary_img_otsu = cv2.threshold(np.array(img), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    # Extract contours from the binary image
+    contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Get the largest contour
+    largest_contour = max(contours, key=cv2.contourArea)
+
+    # Get the minimum area bounding quadrilateral (external to the particle)
+    rect = cv2.minAreaRect(largest_contour)
+    box_points = cv2.boxPoints(rect)
+    box_points = np.intp(box_points)
+
+    # Create an empty image to draw both the original contour and the quadrilateral
+    combined_image = np.zeros_like(binary_img_otsu)
+
+    # Draw the original contour in green
+    cv2.drawContours(combined_image, [largest_contour], 0, (150), 1)
+
+    # Draw the enclosing quadrilateral in white
+    cv2.drawContours(combined_image, [box_points], 0, (255), 1)
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.imshow(combined_image, cmap="gray")
+    ax.set_title("Enclosing Quadrilateral vs Particle")
+        
+    # Return the figure object
+    return fig, box_points
+
+def dimensions_rectangle(A, B, C, D):
+  """
+  Calcule la longueur et la largeur d'un rectangle à partir des coordonnées de ses sommets.
+
+  Args:
+    A: Coordonnées du premier sommet (x1, y1)
+    B: Coordonnées du deuxième sommet (x2, y2)
+    C: Coordonnées du troisième sommet (x3, y3)
+    D: Coordonnées du quatrième sommet (x4, y4)
+
+  Returns:
+    Un tuple contenant la longueur et la largeur du rectangle.
+  """
+
+  # Calcul de la distance entre A et C (longueur)
+  longueur = math.sqrt((C[0] - A[0])**2 + (C[1] - A[1])**2)
+
+  # Calcul de la distance entre A et B (largeur)
+  largeur = math.sqrt((B[0] - A[0])**2 + (B[1] - A[1])**2)
+
+  return longueur, largeur
+
+boxPoints= find_enclosing_quadrilateral(image_path)[1]
+Contours = GetContour(MakeBinary(image_path))
+
+# Exemple d'utilisation
+A = boxPoints[0]
+B = find_enclosing_quadrilateral(image_path)[1][1]
+C = find_enclosing_quadrilateral(image_path)[1][2]
+D = find_enclosing_quadrilateral(image_path)[1][3]
+
+resultat = dimensions_rectangle(A, B, C, D)
+print("La longueur du rectangle est :", resultat[0])
+print("La largeur du rectangle est :", resultat[1])
+max(Contours, key=len)
+
+
+
+def DCBB(Contours, Box_points):
+    #Take a Contours and returns Distance between the Contour of the particle and the Bounding Box
+    # # Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
+    # center_x = (min_col + max_col) / 2
+    # center_y = (min_row + max_row) / 2
+    # Calculate the moments of the contour to find the center
+    moments = cv2.moments(Contours)
+    if moments['m00'] != 0:
+            center_x = int(moments['m10'] / moments['m00'])
+            center_y = int(moments['m01'] / moments['m00'])
+    else:
+        center_x, center_y = 0, 0  # If the contour area is zero, center defaults to (0, 0)
+
+    # Find the largest contour, which corresponds to the outer boundary of the particle
+    largest_contour_new = max(Contours, key=len)
     # # Calculate the polar coordinates (angles and distances from the center)
     angles = np.arctan2(largest_contour_new[:, 0] - center_y, largest_contour_new[:, 1] - center_x)
+    
 
     # Sort the angles and corresponding distances for proper plotting
     sorted_indices = np.argsort(angles)
     sorted_angles = angles[sorted_indices]
     # sorted_distances_to_rectangle = distances_to_rectangle[sorted_indices]
-
+    
+    longueur = dimensions_rectangle(Box_points[0], Box_points[1], Box_points[2], Box_points[3])[0]
+    largeur = dimensions_rectangle(Box_points[0], Box_points[1], Box_points[2], Box_points[3])[1]
     # Calculate the distances between the contour of the particle and the bounding box edges
     # Distances to the four edges of the bounding box
-    distance_to_left_edge = np.abs(largest_contour_new[:, 1] - min_col)
-    distance_to_right_edge = np.abs(largest_contour_new[:, 1] - max_col)
-    distance_to_top_edge = np.abs(largest_contour_new[:, 0] - min_row)
-    distance_to_bottom_edge = np.abs(largest_contour_new[:, 0] - max_row)
+    distance_to_left_edge = np.abs(largest_contour_new[:, 1] - longueur)
+    distance_to_right_edge = np.abs(largest_contour_new[:, 1] - largeur)
+    distance_to_top_edge = np.abs(largest_contour_new[:, 0] - longueur)
+    distance_to_bottom_edge = np.abs(largest_contour_new[:, 0] - largeur)
 
     # For each point on the contour, find the minimum distance to the bounding box edges
     distances_to_bounding_box = np.minimum.reduce([
@@ -91,6 +173,50 @@ def DCBB(Contours, min_row, min_col, max_row, max_col):
     # Sort the angles and corresponding distances for proper plotting
     sorted_distances_to_bounding_box = distances_to_bounding_box[sorted_indices]
     return sorted_distances_to_bounding_box, sorted_angles
+
+DCBB(Contours, boxPoints)
+
+# def DCBB(Contours, min_row, min_col, max_row, max_col):
+#     #Take a Contours and returns Distance between the Contour of the particle and the Bounding Box
+#     # # Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
+#     # center_x = (min_col + max_col) / 2
+#     # center_y = (min_row + max_row) / 2
+#     # Calculate the moments of the contour to find the center
+#     moments = cv2.moments(Contours)
+#     if moments['m00'] != 0:
+#             center_x = int(moments['m10'] / moments['m00'])
+#             center_y = int(moments['m01'] / moments['m00'])
+#     else:
+#         center_x, center_y = 0, 0  # If the contour area is zero, center defaults to (0, 0)
+
+#     # Find the largest contour, which corresponds to the outer boundary of the particle
+#     largest_contour_new = max(Contours, key=len)
+#     # # Calculate the polar coordinates (angles and distances from the center)
+#     angles = np.arctan2(largest_contour_new[:, 0] - center_y, largest_contour_new[:, 1] - center_x)
+
+#     # Sort the angles and corresponding distances for proper plotting
+#     sorted_indices = np.argsort(angles)
+#     sorted_angles = angles[sorted_indices]
+#     # sorted_distances_to_rectangle = distances_to_rectangle[sorted_indices]
+
+#     # Calculate the distances between the contour of the particle and the bounding box edges
+#     # Distances to the four edges of the bounding box
+#     distance_to_left_edge = np.abs(largest_contour_new[:, 1] - min_col)
+#     distance_to_right_edge = np.abs(largest_contour_new[:, 1] - max_col)
+#     distance_to_top_edge = np.abs(largest_contour_new[:, 0] - min_row)
+#     distance_to_bottom_edge = np.abs(largest_contour_new[:, 0] - max_row)
+
+#     # For each point on the contour, find the minimum distance to the bounding box edges
+#     distances_to_bounding_box = np.minimum.reduce([
+#         distance_to_left_edge,
+#         distance_to_right_edge,
+#         distance_to_top_edge,
+#         distance_to_bottom_edge
+#     ])
+
+#     # Sort the angles and corresponding distances for proper plotting
+#     sorted_distances_to_bounding_box = distances_to_bounding_box[sorted_indices]
+#     return sorted_distances_to_bounding_box, sorted_angles
 
 GetB(MakeBinary(image_path))[3]
      
@@ -108,57 +234,14 @@ plt.grid(True)
 plt.show()
 
 
+Box_points= find_enclosing_quadrilateral(image_path)[1]
+Box_points
 
-def find_enclosing_quadrilateral(image_path):
-    # Load the image
-    img = Image.open(image_path).convert("L")
-    
-    # Convert the image to binary using Otsu's method
-    _, binary_img_otsu = cv2.threshold(np.array(img), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-    # Extract contours from the binary image
-    contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    if len(contours) > 0:
-        # Get the largest contour
-        largest_contour = max(contours, key=cv2.contourArea)
-
-        # Get the minimum area bounding quadrilateral (external to the particle)
-        rect = cv2.minAreaRect(largest_contour)
-        box_points = cv2.boxPoints(rect)
-        box_points = np.int0(box_points)
-
-        # Create an empty image to draw both the original contour and the quadrilateral
-        combined_image = np.zeros_like(binary_img_otsu)
-
-        # Draw the original contour in green
-        cv2.drawContours(combined_image, [largest_contour], 0, (150), 1)
-
-        # Draw the enclosing quadrilateral in white
-        cv2.drawContours(combined_image, [box_points], 0, (255), 1)
-
-        # Create the plot
-        fig, ax = plt.subplots(figsize=(6, 6))
-        ax.imshow(combined_image, cmap="gray")
-        ax.set_title("Enclosing Quadrilateral vs Particle")
-        
-        # Return the figure object
-        return fig
-    else:
-        print("No contours found.")
-        return None
-
-
-find_enclosing_quadrilateral(image_path)
-
-
-
- 
 BinaryImage = MakeBinary(image_path)
 GetB(BinaryImage)
 
 
-GetB(image_path)
+GetB(BinaryImage)
 
 # Convert the image to grayscale
 gray_image = image.convert("L")
@@ -171,7 +254,7 @@ threshold_value = filters.threshold_otsu(image_array)
 binary_image = np.where(image_array < threshold_value, 1, 0)
 
 # Find the bounding box of the particle using this thresholded binary image
-non_white_pixels_1 = np.argwhere(binary_image > 0)
+non_white_pixels_1 = np.argwhere(BinaryImage > 0)
 
 # Get the bounding box coordinates
 min_row, min_col = non_white_pixels_1.min(axis=0)
@@ -186,7 +269,7 @@ B1_image, B2_image, B_image
 
 
 # # Find contours of the particle
-contours_step1 = measure.find_contours(binary_image, level=0.8)
+contours_step1 = measure.find_contours(BinaryImage, level=0.8)
 
 # # Find the largest contour, which corresponds to the outer boundary of the particle
 largest_contour_step1 = max(contours_step1, key=len)
@@ -197,7 +280,7 @@ tangents_step1 = np.arctan2(gradient_step1[:, 1], gradient_step1[:, 0])
 
 
 # Find contours of the particle
-contours_new = measure.find_contours(binary_image, level=0.8)
+contours_new = measure.find_contours(BinaryImage, level=0.8)
 
 # Find the largest contour, which corresponds to the outer boundary of the particle
 largest_contour_new = max(contours_new, key=len)
@@ -225,9 +308,13 @@ plt.show()
 
 
 
-# # Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
+# Convert the contour of the particle to polar coordinates with respect to the center of the bounding box
 center_x = (min_col + max_col) / 2
 center_y = (min_row + max_row) / 2
+
+# moments = cv2.moments(largest_contour_new)
+# center_x = int(moments['m10'] / moments['m00'])
+# center_y = int(moments['m01'] / moments['m00'])
 
 # # Calculate the polar coordinates (angles and distances from the center)
 angles = np.arctan2(largest_contour_new[:, 0] - center_y, largest_contour_new[:, 1] - center_x)
