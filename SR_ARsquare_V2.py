@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 # Load the image
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\shape_ratio_ARsquare\images\example2_upscale.png"
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 # Threshold the image to binary
@@ -223,8 +223,8 @@ def particle_average_size(Largest_Contour):
 ParticleSize = particle_average_size(largest_contour)
 ParticleSize
 # Find and plot points where the distance is less than x
-close_points = find_close_points(largest_contour, box_points,0.0005*ParticleSize)
-
+close_points = find_close_points(largest_contour, box_points,0.0001*ParticleSize)
+close_points
 # Create an image to display the close points
 close_points_image = np.zeros_like(binary_img_otsu)
 
@@ -239,6 +239,27 @@ ax.set_title("Points with Distance < 2")
 plt.show()
 
 
+# Fonction pour calculer la distance euclidienne entre deux points
+def distance(p1, p2):
+    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
+# Fonction pour obtenir les deux points les plus éloignés
+def points_les_plus_eloignes(points):
+    max_distance = 0
+    point_1 = None
+    point_2 = None
+    
+    # Parcourir toutes les paires de points
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            dist = distance(points[i], points[j])
+            if dist > max_distance:
+                max_distance = dist
+                point_1 = points[i]
+                point_2 = points[j]
+    
+    return point_1, point_2
+
 # Function to divide points into four groups based on proximity to each side of the quadrilateral
 def divide_points_by_quadrilateral_edges(close_points, box_points):
     subsets = [[] for _ in range(4)]  # Create 4 empty lists for the four edges
@@ -246,18 +267,25 @@ def divide_points_by_quadrilateral_edges(close_points, box_points):
     # For each point, find the closest edge of the quadrilateral and assign it to the corresponding subset
     for point in close_points:
         min_distance = float('inf')
+        # print(min_distance)
         closest_edge = None
+        print("flute")
 
         # Iterate over each edge of the quadrilateral
         for i in range(len(box_points)):
             v = box_points[i]
-            w = box_points[(i + 1) % len(box_points)]  # Next point in the quadrilateral
+            w = box_points[(i+1) % len(box_points)]  # Next point in the quadrilateral
             projection = closest_point_on_segment(point, v, w)
             distance = np.linalg.norm(point - projection)
+            if i == 1:
+                print(distance)
+                print(min_distance)
 
             # Track the closest edge
             if distance < min_distance:
+                print("merde")
                 min_distance = distance
+                print(min_distance)
                 closest_edge = i
 
         # Assign the point to the corresponding edge subset
@@ -265,19 +293,29 @@ def divide_points_by_quadrilateral_edges(close_points, box_points):
 
     return subsets
 
+import math
+
 # Function to get the first and last point from each subset
 def get_first_and_last_points(subsets):
     first_and_last_points = []
+    
+    for i in range(len(subsets)):
+        point1, point2 = points_les_plus_eloignes(subsets[i])
+        first_and_last_points.append((point1, point2))
 
-    for subset in subsets:
-        if len(subset) > 1:
-            first_and_last_points.append((subset[0], subset[-1]))
+    # for subset in subsets:
+    #     if len(subset) > 1:
+    #         first_and_last_points.append((subset[0], subset[-1]))
 
     return first_and_last_points
 
+box_points
+
 # Divide the close points into four subsets based on proximity to the edges
 subsets = divide_points_by_quadrilateral_edges(close_points, box_points)
-
+subsets
+len(subsets[0])+len(subsets[1])+len(subsets[2])+len(subsets[3])
+len(close_points)
 # Get the first and last points for each subset
 first_and_last_points = get_first_and_last_points(subsets)
 
