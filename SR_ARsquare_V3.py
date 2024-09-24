@@ -8,109 +8,12 @@ Created on Sun Sep 22 20:15:26 2024
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 from PIL import Image
 
 # Load the image
 image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\shape_ratio_ARsquare\images\example2_upscale_bis.png"
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
-# # Threshold the image to binary
-# _, thresholded = cv2.threshold(image, 240, 255, cv2.THRESH_BINARY_INV)
-
-# # Find contours
-# contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# # Draw contours on a blank image
-# contour_image = np.zeros_like(image)
-# cv2.drawContours(contour_image, contours, -1, (255, 255, 255), 1)
-
-# # Plot the original and contour image
-# fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-# ax[0].imshow(image, cmap='gray')
-# ax[0].set_title("Original Image")
-# ax[0].axis('off')
-
-# ax[1].imshow(contour_image, cmap='gray')
-# ax[1].set_title("Extracted Contour")
-# ax[1].axis('off')
-
-# plt.show()
-
-# # Find the minimum enclosing quadrilateral for the largest contour
-# # and ensure its area is larger than the contour area.
-
-# # Find the largest contour (assuming it's the particle)
-# largest_contour = max(contours, key=cv2.contourArea)
-
-# # Get the area of the contour
-# contour_area = cv2.contourArea(largest_contour)
-
-# # Find the minimum area bounding quadrilateral
-# rect = cv2.minAreaRect(largest_contour)
-# box = cv2.boxPoints(rect)
-# box = np.intp(box)
-
-# # Get the area of the enclosing quadrilateral
-# enclosing_quad_area = cv2.contourArea(box)
-
-# # # Ensure the enclosing quadrilateral area is larger than the contour area
-# # if enclosing_quad_area > contour_area:
-# #     print(f"Enclosing quadrilateral area: {enclosing_quad_area}, Contour area: {contour_area}")
-# # else:
-# #     print("The enclosing quadrilateral is not larger than the particle area. Adjustments might be needed.")
-
-# # Draw the enclosing quadrilateral on a blank image
-# quad_image = np.zeros_like(image)
-# cv2.drawContours(quad_image, [box], 0, (255, 255, 255), 2)
-
-# # Display the original image, the contour, and the enclosing quadrilateral
-# fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-# ax[0].imshow(contour_image, cmap='gray')
-# ax[0].set_title("Extracted Contour")
-# ax[0].axis('off')
-
-# ax[1].imshow(quad_image, cmap='gray')
-# ax[1].set_title("Enclosing Quadrilateral")
-# ax[1].axis('off')
-
-# plt.show()
-
-
-# # Updated function to plot points instead of lines for the contour and quadrilateral
-# def find_enclosing_quadrilateral_with_points(image_path):
-#     # Load the image
-#     img = Image.open(image_path).convert("L")
-    
-#     # Convert the image to binary using Otsu's method
-#     _, binary_img_otsu = cv2.threshold(np.array(img), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-#     # Extract contours from the binary image
-#     contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-#     # Get the largest contour
-#     largest_contour = max(contours, key=cv2.contourArea)
-
-#     # Get the minimum area bounding quadrilateral (external to the particle)
-#     rect = cv2.minAreaRect(largest_contour)
-#     box_points = cv2.boxPoints(rect)
-#     box_points = np.intp(box_points)
-
-#     # Create the plot
-#     fig, ax = plt.subplots(figsize=(6, 6))
-    
-#     # Plot the points of the original contour in green
-#     for point in largest_contour:
-#         ax.plot(point[0][0], point[0][1], 'go', markersize=1)
-    
-#     # Plot the points of the enclosing quadrilateral in red
-#     for point in box_points:
-#         ax.plot(point[0], point[1], 'ro', markersize=5)
-    
-#     ax.set_title("Enclosing Quadrilateral Points vs Particle Contour Points")
-#     ax.set_aspect('equal')
-#     plt.gca().invert_yaxis()  # Invert Y axis to match image coordinates
-#     plt.show()
 
 # # Call the updated function to plot points instead of lines
 # find_enclosing_quadrilateral_with_points(image_path)
@@ -128,45 +31,6 @@ def interpolate_points(points, num_interpolations=10):
             interpolated_points.append(interpolated_point)
 
     return np.array(interpolated_points)
-
-# # Updated function to plot interpolated points for both the contour and the quadrilateral
-# def find_enclosing_quadrilateral_with_interpolation(image_path):
-#     # Load the image
-#     img = Image.open(image_path).convert("L")
-    
-#     # Convert the image to binary using Otsu's method
-#     _, binary_img_otsu = cv2.threshold(np.array(img), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-#     # Extract contours from the binary image
-#     contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-#     # Get the largest contour
-#     largest_contour = max(contours, key=cv2.contourArea)
-
-#     # Get the minimum area bounding quadrilateral (external to the particle)
-#     rect = cv2.minAreaRect(largest_contour)
-#     box_points = cv2.boxPoints(rect)
-#     box_points = np.intp(box_points)
-
-#     # Interpolate points for the contour and quadrilateral
-#     interpolated_contour_points = interpolate_points(largest_contour[:, 0], num_interpolations=20)
-#     interpolated_quad_points = interpolate_points(box_points, num_interpolations=20)
-
-#     # Create the plot
-#     fig, ax = plt.subplots(figsize=(6, 6))
-
-#     # Plot the interpolated points of the contour in green
-#     ax.plot(interpolated_contour_points[:, 0], interpolated_contour_points[:, 1], 'go', markersize=2, label='Interpolated Contour')
-
-#     # Plot the interpolated points of the enclosing quadrilateral in red
-#     ax.plot(interpolated_quad_points[:, 0], interpolated_quad_points[:, 1], 'ro', markersize=3, label='Interpolated Quadrilateral')
-
-#     ax.set_title("Interpolated Points: Enclosing Quadrilateral vs Particle Contour")
-#     ax.set_aspect('equal')
-#     plt.gca().invert_yaxis()  # Invert Y axis to match image coordinates
-#     plt.legend()
-#     plt.show()
-#     return fig, box_points, largest_contour, binary_img_otsu
 
 
 # Updated function to plot interpolated points for both the contour and the quadrilateral - les points interpolés prennent la place des autres
@@ -216,44 +80,6 @@ def find_enclosing_quadrilateral_with_interpolation(image_path):
 fig, box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral_with_interpolation(image_path)
 
 
-
-# def find_enclosing_quadrilateral(image_path):
-#     # Load the image
-#     img = Image.open(image_path).convert("L")
-    
-#     # Convert the image to binary using Otsu's method
-#     _, binary_img_otsu = cv2.threshold(np.array(img), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-#     # Extract contours from the binary image
-#     contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-#     # Get the largest contour
-#     largest_contour = max(contours, key=cv2.contourArea)
-
-#     # Get the minimum area bounding quadrilateral (external to the particle)
-#     rect = cv2.minAreaRect(largest_contour)
-#     box_points = cv2.boxPoints(rect)
-#     box_points = np.intp(box_points)
-
-#     # Create an empty image to draw both the original contour and the quadrilateral
-#     combined_image = np.zeros_like(binary_img_otsu)
-
-#     # Draw the original contour
-#     cv2.drawContours(combined_image, [largest_contour], 0, (150), 1)
-
-#     # Draw the enclosing quadrilateral
-#     cv2.drawContours(combined_image, [box_points], 0, (255), 1)
-
-#     # Create the plot
-#     fig, ax = plt.subplots(figsize=(6, 6))
-#     ax.imshow(combined_image, cmap="gray")
-#     ax.set_title("Enclosing Quadrilateral vs Particle")
-    
-#     # Return the figure object and the quadrilateral points
-#     return fig, box_points
-
-
-
 # # Test the function with the provided image
 # fig, box_points = find_enclosing_quadrilateral(image_path)
 plt.show()  # Display the result
@@ -277,39 +103,6 @@ def closest_point_on_segment(p, v, w):
     t = max(0, min(1, t))
     projection = v + t * (w - v)
     return projection
-
-# # Calculate and plot distances between particle contour and the enclosing quadrilateral
-# def plot_distances_between_particle_and_quadrilateral(largest_contour, box_points, image_shape):
-#     distances_image = np.zeros(image_shape)
-
-#     # For each point on the particle contour
-#     for point in largest_contour:
-#         point = point[0]  # Extract the coordinates of the point
-
-#         # Find the closest point on the quadrilateral
-#         min_distance = float('inf')
-#         closest_point = None
-
-#         # Iterate over each edge of the quadrilateral
-#         for i in range(len(box_points)):
-#             v = box_points[i]
-#             w = box_points[(i + 1) % len(box_points)]  # Next point in the quadrilateral
-#             projection = closest_point_on_segment(point, v, w)
-#             distance = np.linalg.norm(point - projection)
-
-#             # Track the closest distance
-#             if distance < min_distance:
-#                 min_distance = distance
-#                 closest_point = projection
-
-#         # Draw the distance line
-#         cv2.line(distances_image, tuple(point), tuple(closest_point.astype(int)), (255), 1)
-
-#     # Plot the result
-#     fig, ax = plt.subplots(figsize=(6, 6))
-#     ax.imshow(distances_image, cmap="gray")
-#     ax.set_title("Distances Between Particle and Quadrilateral")
-#     plt.show()
 
 
 # Calculate and plot distances between particle contour and the enclosing quadrilateral
@@ -350,34 +143,6 @@ def plot_distances_between_particle_and_quadrilateral(largest_contour, box_point
 
 # Now rerun the function to plot distances
 plot_distances_between_particle_and_quadrilateral(largest_contour, box_points, binary_img_otsu.shape)
-
-# # Function to find points where the distance is less than 2
-# def find_close_points(largest_contour, box_points, min_len):
-#     close_points = []
-
-#     # For each point on the particle contour
-#     for point in largest_contour:
-#         point = point[0]  # Extract the coordinates of the point
-
-#         # Find the closest point on the quadrilateral
-#         min_distance = float('inf')
-
-#         # Iterate over each edge of the quadrilateral
-#         for i in range(len(box_points)):
-#             v = box_points[i]
-#             w = box_points[(i + 1) % len(box_points)]  # Next point in the quadrilateral
-#             projection = closest_point_on_segment(point, v, w)
-#             distance = np.linalg.norm(point - projection)
-
-#             # Track the closest distance
-#             if distance < min_distance:
-#                 min_distance = distance
-
-#         # Check if the distance is less than min_len
-#         if min_distance < min_len:
-#             close_points.append(point)
-
-#     return close_points
 
 # Function to find points where the distance is less than 2
 def find_close_points(largest_contour, box_points, min_len):
@@ -436,24 +201,51 @@ ax.set_title("Points with Distance < 2")
 plt.show()
 
 
+# Fonction pour calculer la distance euclidienne entre deux points
+def distance(p1, p2):
+    return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
+# Fonction pour obtenir les deux points les plus éloignés
+def points_les_plus_eloignes(points):
+    max_distance = 0
+    point_1 = None
+    point_2 = None
+    
+    # Parcourir toutes les paires de points
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            dist = distance(points[i], points[j])
+            if dist > max_distance:
+                max_distance = dist
+                point_1 = points[i]
+                point_2 = points[j]
+    
+    return point_1, point_2
+
 # Function to divide points into four groups based on proximity to each side of the quadrilateral
-def divide_points_by_quadrilateral_edges(close_points, box_points_4_points):
-    subsets = [[] for _ in range(4)]  # Create 4 empty lists for the four edges
+def divide_points_by_quadrilateral_edges(close_points, box_points):
+    subsets = [[] for _ in range(len(box_points))]  # Create 4 empty lists for the four edges
 
     # For each point, find the closest edge of the quadrilateral and assign it to the corresponding subset
     for point in close_points:
         min_distance = float('inf')
+        # print(min_distance)
         closest_edge = None
 
+
         # Iterate over each edge of the quadrilateral
-        for i in range(len(box_points_4_points)):
+        for i in range(len(box_points)):
             v = box_points[i]
-            w = box_points[(i + 1) % len(box_points_4_points)]  # Next point in the quadrilateral
+            w = box_points[(i+1) % len(box_points)]  # Next point in the quadrilateral
             projection = closest_point_on_segment(point, v, w)
             distance = np.linalg.norm(point - projection)
+            if i == 1:
+                i = 1
+
 
             # Track the closest edge
             if distance < min_distance:
+
                 min_distance = distance
                 closest_edge = i
 
@@ -491,18 +283,18 @@ box_points_4_points = cv2.boxPoints(rect)
 box_points_4_points = np.intp(box_points_4_points)
 box_points_4_points
 
-ParticleSize = particle_average_size(largest_contour2)
-ParticleSize
-# Find and plot points where the distance is less than x
-close_points = find_close_points(largest_contour2, box_points_4_points, 0.0001*ParticleSize)
-close_points
+# ParticleSize = particle_average_size(largest_contour2)
+# ParticleSize
+# # Find and plot points where the distance is less than x
+# close_points = find_close_points(largest_contour2, box_points_4_points, 0.0001*ParticleSize)
+# close_points
 
-# Create an image to display the close points
-close_points_image = np.zeros_like(binary_img_otsu)
+# # Create an image to display the close points
+# close_points_image = np.zeros_like(binary_img_otsu)
 
 # Draw the close points in white
 for point in close_points:
-    print(point)
+    # print(point)
     cv2.circle(close_points_image, tuple(point), 1, (255), -1)
 
 # Plot the result
@@ -567,14 +359,14 @@ def visualize_full_info_red_points(image_shape, first_and_last_points, largest_c
 visualize_full_info_red_points(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points)
 
 # Function to calculate and visualize segment lengths between first and last points
-def visualize_segments_with_lengths(image_shape, first_and_last_points, largest_contour, box_points):
+def visualize_segments_with_lengths(image_shape, first_and_last_points, largest_contour, box_points_4_points):
     visual_image = np.zeros(image_shape)
 
     # Draw the particle contour in gray
     cv2.drawContours(visual_image, [largest_contour], 0, (150), 1)
 
     # Draw the quadrilateral in white
-    cv2.drawContours(visual_image, [box_points], 0, (255), 1)
+    cv2.drawContours(visual_image, [box_points_4_points], 0, (255), 1)
 
     # Draw the first and last points in red and measure distances
     for (first_point, last_point) in first_and_last_points:
@@ -592,9 +384,9 @@ def visualize_segments_with_lengths(image_shape, first_and_last_points, largest_
         cv2.circle(visual_image, tuple(first_point), 4, (255), -1)  # First point in red
         cv2.circle(visual_image, tuple(last_point), 4, (255), -1)   # Last point in red
         
-    for i in range(len(box_points)):
-        pt1 = box_points[i]
-        pt2 = box_points[(i + 1) % len(box_points)]  # Next point in the quadrilateral
+    for i in range(len(box_points_4_points)):
+        pt1 = box_points_4_points[i]
+        pt2 = box_points_4_points[(i + 1) % len(box_points_4_points)]  # Next point in the quadrilateral
 
         # Calculate the Euclidean distance between points of the quadrilateral
         distance = np.linalg.norm(pt1 - pt2)
@@ -615,7 +407,7 @@ def visualize_segments_with_lengths(image_shape, first_and_last_points, largest_
     plt.show()
 
 # Visualize the segments and their lengths
-visualize_segments_with_lengths(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points)
+visualize_segments_with_lengths(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points_4_points)
 
 first_and_last_points
 
@@ -624,8 +416,8 @@ A
 # Draw the first and last points in red and measure distances
 for (first_point, last_point) in first_and_last_points:
     # Calculate the Euclidean distance between the first and last points
-    distance = np.linalg.norm(first_point - last_point)
-    A = A + [distance]
+    D = np.linalg.norm(first_point - last_point)
+    A = A + [D]
     
 distance
 A
@@ -653,13 +445,13 @@ B
 #     print(distance)
 #     B = B + [distance]
     
-for i in range(len(box_points)):
-        pt1 = box_points[i]
-        pt2 = box_points[(i + 1) % len(box_points)]  # Next point in the quadrilateral
+for i in range(len(box_points_4_points)):
+        pt1 = box_points_4_points[i]
+        pt2 = box_points_4_points[(i + 1) % len(box_points_4_points)]  # Next point in the quadrilateral
 
         # Calculate the Euclidean distance between points of the quadrilateral
-        distance = np.linalg.norm(pt1 - pt2)
-        B = B + [distance]
+        D = np.linalg.norm(pt1 - pt2)
+        B = B + [D]
     
 B
 

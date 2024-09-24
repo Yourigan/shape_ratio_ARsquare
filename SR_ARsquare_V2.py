@@ -12,69 +12,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 # Load the image
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\shape_ratio_ARsquare\images\example2_upscale.png"
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example2_upscale.png"
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
-# Threshold the image to binary
-_, thresholded = cv2.threshold(image, 240, 255, cv2.THRESH_BINARY_INV)
-
-# Find contours
-contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# Draw contours on a blank image
-contour_image = np.zeros_like(image)
-cv2.drawContours(contour_image, contours, -1, (255, 255, 255), 1)
-
-# Plot the original and contour image
-fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-ax[0].imshow(image, cmap='gray')
-ax[0].set_title("Original Image")
-ax[0].axis('off')
-
-ax[1].imshow(contour_image, cmap='gray')
-ax[1].set_title("Extracted Contour")
-ax[1].axis('off')
-
-plt.show()
-
-# Find the minimum enclosing quadrilateral for the largest contour
-# and ensure its area is larger than the contour area.
-
-# Find the largest contour (assuming it's the particle)
-largest_contour = max(contours, key=cv2.contourArea)
-
-# Get the area of the contour
-contour_area = cv2.contourArea(largest_contour)
-
-# Find the minimum area bounding quadrilateral
-rect = cv2.minAreaRect(largest_contour)
-box = cv2.boxPoints(rect)
-box = np.intp(box)
-
-# Get the area of the enclosing quadrilateral
-enclosing_quad_area = cv2.contourArea(box)
-
-# # Ensure the enclosing quadrilateral area is larger than the contour area
-# if enclosing_quad_area > contour_area:
-#     print(f"Enclosing quadrilateral area: {enclosing_quad_area}, Contour area: {contour_area}")
-# else:
-#     print("The enclosing quadrilateral is not larger than the particle area. Adjustments might be needed.")
-
-# Draw the enclosing quadrilateral on a blank image
-quad_image = np.zeros_like(image)
-cv2.drawContours(quad_image, [box], 0, (255, 255, 255), 2)
-
-# Display the original image, the contour, and the enclosing quadrilateral
-fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-ax[0].imshow(contour_image, cmap='gray')
-ax[0].set_title("Extracted Contour")
-ax[0].axis('off')
-
-ax[1].imshow(quad_image, cmap='gray')
-ax[1].set_title("Enclosing Quadrilateral")
-ax[1].axis('off')
-
-plt.show()
 
 
 def find_enclosing_quadrilateral(image_path):
@@ -269,7 +208,7 @@ def divide_points_by_quadrilateral_edges(close_points, box_points):
         min_distance = float('inf')
         # print(min_distance)
         closest_edge = None
-        print("flute")
+        # print("flute")
 
         # Iterate over each edge of the quadrilateral
         for i in range(len(box_points)):
@@ -278,14 +217,15 @@ def divide_points_by_quadrilateral_edges(close_points, box_points):
             projection = closest_point_on_segment(point, v, w)
             distance = np.linalg.norm(point - projection)
             if i == 1:
-                print(distance)
-                print(min_distance)
+                i = 1
+                # print(distance)
+                # print(min_distance)
 
             # Track the closest edge
             if distance < min_distance:
-                print("merde")
+                # print("merde")
                 min_distance = distance
-                print(min_distance)
+                # print(min_distance)
                 closest_edge = i
 
         # Assign the point to the corresponding edge subset
@@ -426,10 +366,9 @@ A
 # Draw the first and last points in red and measure distances
 for (first_point, last_point) in first_and_last_points:
     # Calculate the Euclidean distance between the first and last points
-    distance = np.linalg.norm(first_point - last_point)
-    A = A + [distance]
+    D = np.linalg.norm(first_point - last_point)
+    A = A + [D]
     
-distance
 A
 
 tuple(first_and_last_points[0][0])
@@ -460,8 +399,8 @@ for i in range(len(box_points)):
         pt2 = box_points[(i + 1) % len(box_points)]  # Next point in the quadrilateral
 
         # Calculate the Euclidean distance between points of the quadrilateral
-        distance = np.linalg.norm(pt1 - pt2)
-        B = B + [distance]
+        D = np.linalg.norm(pt1 - pt2)
+        B = B + [D]
     
 B
 
