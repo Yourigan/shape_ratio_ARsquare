@@ -15,7 +15,7 @@ from SR_ARsquare_V2 import CalculateShapeFactorFromImage
 import matplotlib.pyplot as plt
 
 # Chemin du dossier
-dossier = Path(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\scale")
+dossier = Path(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\test2")
 dossier
 
 # Récupérer les chemins d'accès des fichiers dans une liste

@@ -14,7 +14,13 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # *************************** Function N°1 **************************************
 
+
 def find_enclosing_quadrilateral(image_path):
+    largest_contour, binary_img_otsu = GetContour(image_path)
+    box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral_from_contour(largest_contour, binary_img_otsu)
+    return box_points, largest_contour, binary_img_otsu
+
+def GetContour(image_path):
     # Load the image
     img = Image.open(image_path).convert("L")
     
@@ -26,29 +32,25 @@ def find_enclosing_quadrilateral(image_path):
 
     # Get the largest contour
     largest_contour = max(contours, key=cv2.contourArea)
+    return largest_contour, binary_img_otsu
 
+def find_enclosing_quadrilateral_from_contour(largest_contour, binary_img_otsu):
+    
     # Get the minimum area bounding quadrilateral (external to the particle)
     rect = cv2.minAreaRect(largest_contour)
     box_points = cv2.boxPoints(rect)
     box_points = np.intp(box_points)
 
-    # # Create an empty image to draw both the original contour and the quadrilateral
-    # combined_image = np.zeros_like(binary_img_otsu)
-
-    # # Draw the original contour
-    # cv2.drawContours(combined_image, [largest_contour], 0, (150), 1)
-
-    # # Draw the enclosing quadrilateral
-    # cv2.drawContours(combined_image, [box_points], 0, (255), 1)
-
-    # # Create the plot
-    # fig, ax = plt.subplots(figsize=(6, 6))
-    # ax.imshow(combined_image, cmap="gray")
-    # ax.set_title("Enclosing Quadrilateral vs Particle")
-    
-    # Return the figure object and the quadrilateral points
     return box_points, largest_contour, binary_img_otsu
 
+
+# Load the image
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\shape_ratio_ARsquare\images\example2_upscale_bis.png"
+image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral(image_path)
+box_points
+largest_contour
+binary_img_otsu
 
 # *************************** Function N°2 **************************************
 # Function to calculate the closest point on a line segment from a given point
@@ -229,11 +231,11 @@ def visualize_full_info_red_points(image_shape, first_and_last_points, largest_c
 
     # Draw the first and last points in red
     for (first_point, last_point) in first_and_last_points:
-        cv2.circle(visual_image, tuple(first_point), 4, (255), 4)  # First point in red
-        cv2.circle(visual_image, tuple(last_point), 4, (255), 4)   # Last point in red
+        cv2.circle(visual_image, tuple(first_point), 4, (255), 2)  # First point in red
+        cv2.circle(visual_image, tuple(last_point), 4, (255), 2)   # Last point in red
 
     # Plot the result
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(20, 20))
     ax.imshow(visual_image, cmap="gray")
     ax.set_title("Contour, Quadrilateral, and First/Last Points in Red")
     
