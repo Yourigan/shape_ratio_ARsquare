@@ -195,7 +195,7 @@ def points_les_plus_eloignes(points):
 #******************************************** Fonction N°9 *******************************************
 # Function to divide points into four groups based on proximity to each side of the quadrilateral
 def divide_points_by_quadrilateral_edges(close_points, box_points):
-    subsets = [[] for _ in range(len(box_points))]  # Create 4 empty lists for the four edges
+    subsets = [[] for _ in range(4)]  # Create 4 empty lists for the four edges
 
     # For each point, find the closest edge of the quadrilateral and assign it to the corresponding subset
     for point in close_points:
@@ -229,13 +229,16 @@ def divide_points_by_quadrilateral_edges(close_points, box_points):
 # Function to get the first and last point from each subset
 def get_first_and_last_points(subsets):
     first_and_last_points = []
+    
+    for i in range(len(subsets)):
+        point1, point2 = points_les_plus_eloignes(subsets[i])
+        first_and_last_points.append((point1, point2))
 
-    for subset in subsets:
-        if len(subset) > 1:
-            first_and_last_points.append((subset[0], subset[-1]))
+    # for subset in subsets:
+    #     if len(subset) > 1:
+    #         first_and_last_points.append((subset[0], subset[-1]))
 
     return first_and_last_points
-
 
 #******************************************** Fonction N°11 *******************************************
 # Function to visualize with points in red
@@ -418,155 +421,155 @@ def CalculateShapeFactorFromImage(image_path, percent, num_interpolations):
 
 CalculateShapeFactorFromImage(image_path, 0.0001, 10)
 
-# Call the updated function to plot interpolated points
-box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral_with_interpolation(image_path, num_interpolations=10)
+# # Call the updated function to plot interpolated points
+# box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral_with_interpolation(image_path, num_interpolations=10)
 
 
-# # Test the function with the provided image
-# fig, box_points = find_enclosing_quadrilateral(image_path)
-plt.show()  # Display the result
+# # # Test the function with the provided image
+# # fig, box_points = find_enclosing_quadrilateral(image_path)
+# plt.show()  # Display the result
 
-box_points
-box_points = box_points.astype(int)
-box_points
-type(largest_contour)
-largest_contour
-largest_contour = largest_contour.astype(int)
-largest_contour
-
-
-# Now rerun the function to plot distances
-plot_distances_between_particle_and_quadrilateral(largest_contour, box_points, binary_img_otsu.shape)
-
-percent = 0.0001
-
-ParticleSize = particle_average_size(largest_contour, percent)
-ParticleSize
-# Find and plot points where the distance is less than x
-close_points = find_close_points(largest_contour, box_points, ParticleSize)
-
-# Create an image to display the close points
-close_points_image = np.zeros_like(binary_img_otsu)
-
-# Draw the close points in white
-for point in close_points:
-    cv2.circle(close_points_image, tuple(point), 1, (255), -1)
-
-# Plot the result
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.imshow(close_points_image, cmap="gray")
-ax.set_title("Points with Distance < 2")
-plt.show()
+# box_points
+# box_points = box_points.astype(int)
+# box_points
+# type(largest_contour)
+# largest_contour
+# largest_contour = largest_contour.astype(int)
+# largest_contour
 
 
-# Re-define the necessary variables from the previous steps to avoid errors
-# This block is needed to rerun the required variables
+# # Now rerun the function to plot distances
+# plot_distances_between_particle_and_quadrilateral(largest_contour, box_points, binary_img_otsu.shape)
 
-# Convert the image to binary using Otsu's method
-_, binary_img_otsu = cv2.threshold(np.array(image), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+# percent = 0.0001
 
-# Extract contours from the binary image
-contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# Get the largest contour
-largest_contour2 = max(contours, key=cv2.contourArea)
-
-
-# Get the minimum area bounding quadrilateral (external to the particle)
-rect = cv2.minAreaRect(largest_contour2)
-box_points_4_points = cv2.boxPoints(rect)
-box_points_4_points = np.intp(box_points_4_points)
-box_points_4_points
-
-# ParticleSize = particle_average_size(largest_contour2)
+# ParticleSize = particle_average_size(largest_contour, percent)
 # ParticleSize
 # # Find and plot points where the distance is less than x
-# close_points = find_close_points(largest_contour2, box_points_4_points, 0.0001*ParticleSize)
-# close_points
+# close_points = find_close_points(largest_contour, box_points, ParticleSize)
 
 # # Create an image to display the close points
 # close_points_image = np.zeros_like(binary_img_otsu)
 
-# Draw the close points in white
-for point in close_points:
-    # print(point)
-    cv2.circle(close_points_image, tuple(point), 1, (255), -1)
+# # Draw the close points in white
+# for point in close_points:
+#     cv2.circle(close_points_image, tuple(point), 1, (255), -1)
 
-# Plot the result
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.imshow(close_points_image, cmap="gray")
-ax.set_title("Points with Distance < 2")
-plt.show()
+# # Plot the result
+# fig, ax = plt.subplots(figsize=(6, 6))
+# ax.imshow(close_points_image, cmap="gray")
+# ax.set_title("Points with Distance < 2")
+# plt.show()
 
-# Divide the close points into four subsets based on proximity to the edges
-subsets = divide_points_by_quadrilateral_edges(close_points, box_points_4_points)
 
-# Get the first and last points for each subset
-first_and_last_points = get_first_and_last_points(subsets)
-# Visualize the particle contour, quadrilateral, and first/last points in red
-visualize_full_info_red_points(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points)
+# # Re-define the necessary variables from the previous steps to avoid errors
+# # This block is needed to rerun the required variables
 
-# Display the first and last points
-first_and_last_points
+# # Convert the image to binary using Otsu's method
+# _, binary_img_otsu = cv2.threshold(np.array(image), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-# Visualize the segments and their lengths
-visualize_segments_with_lengths(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points_4_points)
+# # Extract contours from the binary image
+# contours, _ = cv2.findContours(binary_img_otsu, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-first_and_last_points
+# # Get the largest contour
+# largest_contour2 = max(contours, key=cv2.contourArea)
 
-A = []
-A
-# Draw the first and last points in red and measure distances
-for (first_point, last_point) in first_and_last_points:
-    # Calculate the Euclidean distance between the first and last points
-    D = np.linalg.norm(first_point - last_point)
-    A = A + [D]
-    
-distance
-A
 
-tuple(first_and_last_points[0][0])
+# # Get the minimum area bounding quadrilateral (external to the particle)
+# rect = cv2.minAreaRect(largest_contour2)
+# box_points_4_points = cv2.boxPoints(rect)
+# box_points_4_points = np.intp(box_points_4_points)
+# box_points_4_points
 
-# Calculate the average between the first and third points, and between the second and fourth points
-average_1_3 = round((A[0] + A[2]) / 2,1)
-average_2_4 = round((A[1] + A[3]) / 2,1)
+# # ParticleSize = particle_average_size(largest_contour2)
+# # ParticleSize
+# # # Find and plot points where the distance is less than x
+# # close_points = find_close_points(largest_contour2, box_points_4_points, 0.0001*ParticleSize)
+# # close_points
 
-# Return the calculated averages
-average_1_3, average_2_4
+# # # Create an image to display the close points
+# # close_points_image = np.zeros_like(binary_img_otsu)
 
-a = round((average_1_3 + average_2_4) / 2,1)
-a, average_1_3, average_2_4
+# # Draw the close points in white
+# for point in close_points:
+#     # print(point)
+#     cv2.circle(close_points_image, tuple(point), 1, (255), -1)
 
-box_points
+# # Plot the result
+# fig, ax = plt.subplots(figsize=(6, 6))
+# ax.imshow(close_points_image, cmap="gray")
+# ax.set_title("Points with Distance < 2")
+# plt.show()
 
-B = []
-B
+# # Divide the close points into four subsets based on proximity to the edges
+# subsets = divide_points_by_quadrilateral_edges(close_points, box_points_4_points)
+
+# # Get the first and last points for each subset
+# first_and_last_points = get_first_and_last_points(subsets)
+# # Visualize the particle contour, quadrilateral, and first/last points in red
+# visualize_full_info_red_points(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points)
+
+# # Display the first and last points
+# first_and_last_points
+
+# # Visualize the segments and their lengths
+# visualize_segments_with_lengths(binary_img_otsu.shape, first_and_last_points, largest_contour, box_points_4_points)
+
+# first_and_last_points
+
+# A = []
+# A
 # # Draw the first and last points in red and measure distances
-# for (first_point, last_point) in box_points:
+# for (first_point, last_point) in first_and_last_points:
 #     # Calculate the Euclidean distance between the first and last points
-#     distance = np.linalg.norm(first_point - last_point)
-#     print(distance)
-#     B = B + [distance]
+#     D = np.linalg.norm(first_point - last_point)
+#     A = A + [D]
     
-for i in range(len(box_points_4_points)):
-        pt1 = box_points_4_points[i]
-        pt2 = box_points_4_points[(i + 1) % len(box_points_4_points)]  # Next point in the quadrilateral
+# distance
+# A
 
-        # Calculate the Euclidean distance between points of the quadrilateral
-        D = np.linalg.norm(pt1 - pt2)
-        B = B + [D]
+# tuple(first_and_last_points[0][0])
+
+# # Calculate the average between the first and third points, and between the second and fourth points
+# average_1_3 = round((A[0] + A[2]) / 2,1)
+# average_2_4 = round((A[1] + A[3]) / 2,1)
+
+# # Return the calculated averages
+# average_1_3, average_2_4
+
+# a = round((average_1_3 + average_2_4) / 2,1)
+# a, average_1_3, average_2_4
+
+# box_points
+
+# B = []
+# B
+# # # Draw the first and last points in red and measure distances
+# # for (first_point, last_point) in box_points:
+# #     # Calculate the Euclidean distance between the first and last points
+# #     distance = np.linalg.norm(first_point - last_point)
+# #     print(distance)
+# #     B = B + [distance]
     
-B
+# for i in range(len(box_points_4_points)):
+#         pt1 = box_points_4_points[i]
+#         pt2 = box_points_4_points[(i + 1) % len(box_points_4_points)]  # Next point in the quadrilateral
 
-# Calculate the average between the first and third points, and between the second and fourth points
-Baverage_1_3 = round((B[0] + B[2]) / 2,1)
-Baverage_2_4 = round((B[1] + B[3]) / 2,1)
+#         # Calculate the Euclidean distance between points of the quadrilateral
+#         D = np.linalg.norm(pt1 - pt2)
+#         B = B + [D]
+    
+# B
 
-# Return the calculated averages
-Baverage_1_3, Baverage_2_4
+# # Calculate the average between the first and third points, and between the second and fourth points
+# Baverage_1_3 = round((B[0] + B[2]) / 2,1)
+# Baverage_2_4 = round((B[1] + B[3]) / 2,1)
 
-b = round((Baverage_1_3 + Baverage_2_4) / 2,1)
-b, Baverage_1_3, Baverage_2_4
+# # Return the calculated averages
+# Baverage_1_3, Baverage_2_4
 
-ShapeFactor = round(a/b,2)
-print(ShapeFactor,a,b)
+# b = round((Baverage_1_3 + Baverage_2_4) / 2,1)
+# b, Baverage_1_3, Baverage_2_4
+
+# ShapeFactor = round(a/b,2)
+# print(ShapeFactor,a,b)
