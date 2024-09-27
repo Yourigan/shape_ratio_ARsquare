@@ -373,7 +373,7 @@ def CalculateShapeFactorFromImage(image_path, percent):
     return ShapeFactor, a, b, fig
 
 # # Load the image
-# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example2_upscale.png"
+# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
 # image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 # # Test the function with the provided image

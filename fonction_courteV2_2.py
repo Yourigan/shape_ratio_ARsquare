@@ -2,6 +2,8 @@
 """
 Created on Tue Sep 24 16:09:33 2024
 
+Pour calculer le ShapeFactor d'une image qui comporte plusieurs cellules'
+
 @author: abelr
 """
 
@@ -98,11 +100,11 @@ def GetShapeFactorAllImage(particles_data_otsu, percent):
     return ShapeFactorAllImage
 
 # Load the image
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\test_grandeur_nature2.png"
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\ExampleMultiple4.png"
 image = Image.open(image_path)
 
 particles_data_otsu = CreateContourMultiple(image_path)
 
-GetShapeFactorAllImage(particles_data_otsu, percent=0.001)
+GetShapeFactorAllImage(particles_data_otsu, percent=0.0005)
 
 

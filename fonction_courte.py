@@ -2,6 +2,8 @@
 """
 Created on Tue Sep 24 13:52:27 2024
 
+Calcule le shape factor pour des images ou des dossiers qui contiennent une image avec une seule cellule
+
 @author: abelr
 """
 
@@ -15,7 +17,7 @@ from SR_ARsquare_V2 import CalculateShapeFactorFromImage
 import matplotlib.pyplot as plt
 
 # Chemin du dossier
-dossier = Path(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\test2")
+dossier = Path(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\scale")
 dossier
 
 # Récupérer les chemins d'accès des fichiers dans une liste
@@ -53,7 +55,7 @@ plt.ylim(0,1)
 plt.show()
 
 
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\scale\imageRef_downscale.png"
+image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\bi_cellule3.png"
 percent = 0.0003
 CalculateShapeFactorFromImage(image_path, percent)
 
