@@ -7,7 +7,7 @@ Pour calculer le ShapeFactor d'une image qui comporte plusieurs cellules'
 @author: abelr
 """
 
-
+from pathlib import Path
 from PIL import Image
 import numpy as np
 import cv2
@@ -21,6 +21,10 @@ from SR_ARsquare_V2 import visualize_full_info_red_points
 from SR_ARsquare_V2 import CalculateA
 from SR_ARsquare_V2 import CalculateB
 from SR_ARsquare_V2 import CalculateShapeFactor
+from infos_fichiers import demander_chemin_dossier
+from infos_fichiers import demander_informations
+import csv
+
 
 
 def CalculateShapeFactorFromBinaryAndContour(largest_contour, binary_img_otsu, percent):
@@ -80,31 +84,119 @@ def CreateContourMultiple(image_path):
     return particles_data_otsu
 
 
-def GetShapeFactorAllImage(particles_data_otsu, percent):
+def GetShapeFactorAllImage(particles_data_otsu, percent, alliage, temperature, duree_tth, FileIdInDir):
     ShapeFactorAllImage = np.array([])
+    # Créer le nom du fichier CSV en fonction des informations
+    nom_fichier = f"{alliage}_{temperature}_{duree_tth}.csv"
+    # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
+    nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
+    # Écrire les informations dans le fichier CSV
+    with open(nom_fichier, mode='a', newline='', encoding='utf-8') as fichier_csv:
+        writer = csv.writer(fichier_csv)
 
-    for particle_name, data in particles_data_otsu.items():
-        # particle_name contiendra les clés, par exemple "Particle_1", "Particle_2", etc.
-        # data contiendra le contour et le masque binaire pour chaque particule
-        
-        contour = data["contour"]  # Accéder au contour
-        binary_mask = data["binary_mask"]  # Accéder au masque binaire
-        
-        box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral_from_contour(contour, binary_mask)
-        ShapeFactor, a, b, fig = CalculateShapeFactorFromBinaryAndContour(largest_contour, binary_img_otsu, percent)
-        print(ShapeFactor)
-        ShapeFactorAllImage = np.append(ShapeFactorAllImage,ShapeFactor)
+        # Écrire l'en-tête
+        writer.writerow(["Alliage", "Temperature", "Duree du TTH", "ParticleShapeFactor", "A particle", "B particle", "FileIdInDir"])
 
-    ShapeFactorAllImage = np.mean(ShapeFactorAllImage)
+        for particle_name, data in particles_data_otsu.items():
+            # particle_name contiendra les clés, par exemple "Particle_1", "Particle_2", etc.
+            # data contiendra le contour et le masque binaire pour chaque particule
+        
+            contour = data["contour"]  # Accéder au contour
+            binary_mask = data["binary_mask"]  # Accéder au masque binaire
+        
+            box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral_from_contour(contour, binary_mask)
+            ShapeFactor, a, b, fig = CalculateShapeFactorFromBinaryAndContour(largest_contour, binary_img_otsu, percent)
+            print(ShapeFactor)
+        
+            # Ajouter les données
+            writer.writerow([alliage, temperature, duree_tth, ShapeFactor, a, b, FileIdInDir])
+            
+            ShapeFactorAllImage = np.append(ShapeFactorAllImage,ShapeFactor)
+            NbParticles = len(ShapeFactorAllImage)
+
+    ShapeFactorAllImage = np.append(ShapeFactorAllImage,np.mean(ShapeFactorAllImage))
     print(ShapeFactorAllImage)
-    return ShapeFactorAllImage
+    return ShapeFactorAllImage, NbParticles
 
-# Load the image
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\ExampleMultiple4.png"
-image = Image.open(image_path)
 
-particles_data_otsu = CreateContourMultiple(image_path)
+def GetShapeAndStoreInCSV(percent):
+    
+    dossier = demander_chemin_dossier()
+    alliage, temperature, duree_tth = demander_informations()
+    fichiers = [fichier for fichier in dossier.iterdir() if fichier.is_file()]
+    S = []
+    i = 0
+    # Créer le nom du fichier CSV en fonction des informations
+    nom_fichier = f"{alliage}_{temperature}_{duree_tth}_Mean.csv"
+    # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
+    nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
+    # Écrire les informations dans le fichier CSV
+    with open(nom_fichier, mode='a', newline='', encoding='utf-8') as fichier_csv:
+        writer = csv.writer(fichier_csv)
+        # Écrire l'en-tête
+        writer.writerow(["Alliage", "Temperature", "Duree du TTH", "MeanShapeFactor", "NbParticles"])
+    
+        for fichier in fichiers:
+            percent = percent
+        
+            # S = S + [GetShapeFactorAllImage(CreateContourMultiple(fichier), percent, alliage, temperature, duree_tth, i)]
+            ShapeFactorAllImage, NbParticles = GetShapeFactorAllImage(CreateContourMultiple(fichier), percent, alliage, temperature, duree_tth, i)
 
-GetShapeFactorAllImage(particles_data_otsu, percent=0.0005)
+            # Ajouter les données au fichier csv
+            writer.writerow([alliage, temperature, duree_tth, ShapeFactorAllImage[-1] ,NbParticles])
+        
+            i = i+1
+            
+    return S, alliage, temperature, duree_tth
+
+
+GetShapeAndStoreInCSV(0.001)
+
+
+
+# dossier = demander_chemin_dossier()
+# dossier
+# # # Chemin du dossier
+# # dossier = Path(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\test2")
+# # dossier
+
+# # Récupérer les chemins d'accès des fichiers dans une liste
+# fichiers = [fichier for fichier in dossier.iterdir() if fichier.is_file()]
+
+
+
+
+
+# fichiers[1]
+
+
+# # Load the image
+# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\multiples\test_grandeur_nature2.png"
+# image = Image.open(image_path)
+
+# particles_data_otsu = CreateContourMultiple(fichiers[1])
+
+# i = 0
+
+
+# alliage = "alliage"
+# temperature = "temperature"
+# duree_tth = "duree tth"
+
+# ShapeFactorAllImage = GetShapeFactorAllImage(CreateContourMultiple(image_path), 0.0008, alliage, temperature, duree_tth, i)[0][-1]
+# ShapeFactorAllImage
+# i = 0
+# # Afficher la liste des chemins de fichiers
+# print(fichiers)
+# S = []
+# for fichier in fichiers:
+#     fichier
+#     S = S + [GetShapeFactorAllImage(CreateContourMultiple(fichier), 0.0008, alliage, temperature, duree_tth, i)]
+#     i = i+1
+# i    
+# print(S)
+
+
+# GetShapeFactorAllImage(particles_data_otsu, percent=0.0008, alliage=alliage, temperature=temperature, duree_tth=duree_tth)
 
 
