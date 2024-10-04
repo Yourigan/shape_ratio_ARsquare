@@ -7,7 +7,13 @@ Pour calculer le ShapeFactor d'une image qui comporte plusieurs cellules'
 @author: abelr
 """
 
-from pathlib import Path
+import sys
+import os
+
+# Ajouter le chemin du fichier à sys.path
+sys.path.append(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\shape_ratio_ARsquare")
+
+# from pathlib import Path
 from PIL import Image
 import numpy as np
 import cv2
@@ -24,7 +30,6 @@ from SR_ARsquare_V2 import CalculateShapeFactor
 from infos_fichiers import demander_chemin_dossier
 from infos_fichiers import demander_informations
 import csv
-
 
 
 def CalculateShapeFactorFromBinaryAndContour(largest_contour, binary_img_otsu, percent):
@@ -73,7 +78,7 @@ def CreateContourMultiple(image_path):
         }
     
     # Show the binary masks for each particle using Otsu's thresholding
-    fig, axs = plt.subplots(1, len(particles_data_otsu), figsize=(120, 60))
+    fig, axs = plt.subplots(1, len(particles_data_otsu), figsize=(15, 15))
     for i, (particle_name, data) in enumerate(particles_data_otsu.items()):
         axs[i].imshow(data["binary_mask"], cmap='gray')
         axs[i].set_title(particle_name)
@@ -84,12 +89,13 @@ def CreateContourMultiple(image_path):
     return particles_data_otsu
 
 
-def GetShapeFactorAllImage(particles_data_otsu, percent, alliage, temperature, duree_tth, FileIdInDir):
+def GetShapeFactorAllImage(particles_data_otsu, percent, alliage, temperature, duree_tth, FileIdInDir, PathToFileDirectory):
     ShapeFactorAllImage = np.array([])
     # Créer le nom du fichier CSV en fonction des informations
     nom_fichier = f"{alliage}_{temperature}_{duree_tth}.csv"
     # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
     nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
+    nom_fichier = os.path.join(PathToFileDirectory, nom_fichier)
     # Écrire les informations dans le fichier CSV
     with open(nom_fichier, mode='a', newline='', encoding='utf-8') as fichier_csv:
         writer = csv.writer(fichier_csv)
@@ -121,7 +127,9 @@ def GetShapeFactorAllImage(particles_data_otsu, percent, alliage, temperature, d
 
 def GetShapeAndStoreInCSV(percent):
     
+    #Rentrer le dossier dans lequel il y a les fichiers imae d'entrée
     dossier = demander_chemin_dossier()
+    dossier_sortie = demander_chemin_dossier()
     alliage, temperature, duree_tth = demander_informations()
     fichiers = [fichier for fichier in dossier.iterdir() if fichier.is_file()]
     S = []
@@ -130,6 +138,7 @@ def GetShapeAndStoreInCSV(percent):
     nom_fichier = f"{alliage}_{temperature}_{duree_tth}_Mean.csv"
     # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
     nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
+    nom_fichier = os.path.join(dossier_sortie, nom_fichier)
     # Écrire les informations dans le fichier CSV
     with open(nom_fichier, mode='a', newline='', encoding='utf-8') as fichier_csv:
         writer = csv.writer(fichier_csv)
@@ -139,8 +148,8 @@ def GetShapeAndStoreInCSV(percent):
         for fichier in fichiers:
             percent = percent
         
-            # S = S + [GetShapeFactorAllImage(CreateContourMultiple(fichier), percent, alliage, temperature, duree_tth, i)]
-            ShapeFactorAllImage, NbParticles = GetShapeFactorAllImage(CreateContourMultiple(fichier), percent, alliage, temperature, duree_tth, i)
+            # GetShapeFactorAllImage(particles_data_otsu, percent, alliage, temperature, duree_tth, FileIdInDir, PathToFileDirectory)
+            ShapeFactorAllImage, NbParticles = GetShapeFactorAllImage(CreateContourMultiple(fichier), percent, alliage, temperature, duree_tth, i, dossier_sortie)
 
             # Ajouter les données au fichier csv
             writer.writerow([alliage, temperature, duree_tth, ShapeFactorAllImage[-1] ,NbParticles])
@@ -171,20 +180,37 @@ GetShapeAndStoreInCSV(0.001)
 
 
 # # Load the image
-# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\multiples\test_grandeur_nature2.png"
+# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\test_mask\test_grandeur_nature2.png"
 # image = Image.open(image_path)
 
-# particles_data_otsu = CreateContourMultiple(fichiers[1])
+# # particles_data_otsu = CreateContourMultiple(fichiers[1])
 
-# i = 0
+# i = 1
 
 
 # alliage = "alliage"
 # temperature = "temperature"
 # duree_tth = "duree tth"
 
-# ShapeFactorAllImage = GetShapeFactorAllImage(CreateContourMultiple(image_path), 0.0008, alliage, temperature, duree_tth, i)[0][-1]
-# ShapeFactorAllImage
+# PathToFileDirectory = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\fichiers_data"
+
+# nom_fichier = f"{alliage}_{temperature}_{duree_tth}.csv"
+# # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
+# nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
+# # nom_fichier = os.path.join(r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\fichiers_data", nom_fichier)
+# nom_fichier = os.path.join(PathToFileDirectory, nom_fichier)
+
+# print(nom_fichier)
+# with open(nom_fichier, mode='a', newline='', encoding='utf-8') as fichier_csv:
+#     writer = csv.writer(fichier_csv)
+#     # Écrire l'en-tête
+#     writer.writerow(["Alliage", "Temperature", "Duree du TTH", "MeanShapeFactor", "NbParticles"])
+
+
+# CreateContourMultiple(image_path)
+
+# ShapeFactorAllImage = GetShapeFactorAllImage(CreateContourMultiple(image_path), 0.001, alliage, temperature, duree_tth, i)
+# ShapeFactorAllImage[0][-1]
 # i = 0
 # # Afficher la liste des chemins de fichiers
 # print(fichiers)

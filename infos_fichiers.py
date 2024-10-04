@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import simpledialog
 import csv
-import os
+# import os
 from pathlib import Path
 
 # def demander_chemin_dossier():
@@ -55,8 +55,8 @@ def demander_chemin_dossier():
         return None  # Si aucun dossier n'a été sélectionné
 
 
-chemin_dossier = demander_chemin_dossier()
-print(chemin_dossier)
+# chemin_dossier = demander_chemin_dossier()
+# print(chemin_dossier)
 
 def demander_informations():
     # Initialiser la fenêtre Tkinter

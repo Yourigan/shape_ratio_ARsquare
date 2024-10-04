@@ -44,13 +44,7 @@ def find_enclosing_quadrilateral_from_contour(largest_contour, binary_img_otsu):
     return box_points, largest_contour, binary_img_otsu
 
 
-# Load the image
-image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\shape_ratio_ARsquare\images\example2_upscale_bis.png"
-image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral(image_path)
-box_points
-largest_contour
-binary_img_otsu
+
 
 # *************************** Function N°2 **************************************
 # Function to calculate the closest point on a line segment from a given point
@@ -372,12 +366,22 @@ def CalculateShapeFactorFromImage(image_path, percent):
     
     return ShapeFactor, a, b, fig
 
+
+
 # # Load the image
-# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
+# image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\test_mask\combined_mask.png"
 # image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+# box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral(image_path)
+# box_points
+# largest_contour
+# binary_img_otsu
+
+# # # Load the image
+# # image_path = r"F:\Post-doc CERVELLON Alice - RAPETTI Abel (21-22) (J. CORMIER)\13- papiers\03-misfit\python\images\example1.png"
+# # image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 # # Test the function with the provided image
-# fig, box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral(image_path)
+# box_points, largest_contour, binary_img_otsu = find_enclosing_quadrilateral(image_path)
 # plt.show()  # Display the result
 
 # # Now rerun the function to plot distances
