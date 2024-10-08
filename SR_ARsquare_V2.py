@@ -615,7 +615,7 @@ def visualize_full_info_red_points(image_shape, first_and_last_points, largest_c
         cv2.circle(visual_image, tuple(last_point), 4, (255), 2)   # Last point in red
 
     # Plot the result
-    fig, ax = plt.subplots(figsize=(20, 20))
+    fig, ax = plt.subplots(figsize=(15, 15))
     ax.imshow(visual_image, cmap="gray")
     ax.set_title("Contour, Quadrilateral, and First/Last Points in Red")
     
@@ -775,29 +775,8 @@ def CalculateB(box_points):
     b = round((Baverage_1_3 + Baverage_2_4) / 2,1)
     return b, Baverage_1_3, Baverage_2_4, B
 
+
 # # *************************** Function N°14 **************************************
-# def CalculateShapeFactor(a,b):
-#     """
-#     Calculate the shape factor as the ratio of two values, a and b.
-
-#     Parameters
-#     ----------
-#     a : float
-#     b : float
-
-#     Returns
-#     -------
-#     ShapeFactor : float
-#         The shape factor calculated as the ratio of a to b, rounded
-#         to two decimal places.
-#     a : float
-#     b : float
-#     """
-#     #Calculate the shape factor as defined by VanSluytmann 2012
-#     ShapeFactor = round(a/b,2)
-#     return ShapeFactor, a, b
-
-
 def CalculateShapeFactorFromImage(image_path, percent):
     """
     Calculates the shape factor from an image based on the Van Sluytman 
