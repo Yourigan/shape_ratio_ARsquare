@@ -71,37 +71,37 @@ def demander_informations():
     # Retourner les informations
     return alliage, temperature, duree_tth
 
-def ecrire_dans_csv(alliage, temperature, duree_tth):
-    # Créer le nom du fichier CSV en fonction des informations
-    nom_fichier = f"{alliage}_{temperature}_{duree_tth}.csv"
+# def ecrire_dans_csv(alliage, temperature, duree_tth):
+#     # Créer le nom du fichier CSV en fonction des informations
+#     nom_fichier = f"{alliage}_{temperature}_{duree_tth}.csv"
 
-    # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
-    nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
+#     # Remplacer les espaces ou caractères spéciaux dans le nom du fichier (facultatif, pour éviter des problèmes)
+#     nom_fichier = nom_fichier.replace(" ", "_").replace("/", "-")
 
-    # Écrire les informations dans le fichier CSV
-    with open(nom_fichier, mode='w', newline='', encoding='utf-8') as fichier_csv:
-        writer = csv.writer(fichier_csv)
+#     # Écrire les informations dans le fichier CSV
+#     with open(nom_fichier, mode='w', newline='', encoding='utf-8') as fichier_csv:
+#         writer = csv.writer(fichier_csv)
 
-        # Écrire l'en-tête
-        writer.writerow(["Alliage", "Température", "Durée du TTH"])
+#         # Écrire l'en-tête
+#         writer.writerow(["Alliage", "Température", "Durée du TTH"])
 
-        # Ajouter les données
-        writer.writerow([alliage, temperature, duree_tth])
+#         # Ajouter les données
+#         writer.writerow([alliage, temperature, duree_tth])
 
-    print(f"Les informations ont été enregistrées dans {nom_fichier}.")
+#     print(f"Les informations ont été enregistrées dans {nom_fichier}.")
 
-# Fonction principale
-def main_infos():
-    # Demander les informations via la fenêtre de dialogue
-    alliage, temperature, duree_tth = demander_informations()
+# # Fonction principale
+# def main_infos():
+#     # Demander les informations via la fenêtre de dialogue
+#     alliage, temperature, duree_tth = demander_informations()
     
-    if alliage and temperature and duree_tth:  # Vérifier si toutes les informations sont fournies
-        # Écrire les informations dans le fichier CSV
-        ecrire_dans_csv(alliage, temperature, duree_tth)
-    else:
-        print("Toutes les informations n'ont pas été fournies.")
+#     if alliage and temperature and duree_tth:  # Vérifier si toutes les informations sont fournies
+#         # Écrire les informations dans le fichier CSV
+#         ecrire_dans_csv(alliage, temperature, duree_tth)
+#     else:
+#         print("Toutes les informations n'ont pas été fournies.")
 
-# Appeler la fonction principale
-if __name__ == "__main_infos__":
-    main_infos()
+# # Appeler la fonction principale
+# if __name__ == "__main_infos__":
+#     main_infos()
 
